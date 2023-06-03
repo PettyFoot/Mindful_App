@@ -6,10 +6,14 @@ import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -26,21 +30,29 @@ import org.w3c.dom.Text;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link PersonalInfoForm#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class PersonalInfoForm extends AppointmentFragment {
+public class PersonalInfoForm extends AppointmentFragment implements GeoNameApiHandler.OnCitiesFetchedListener{
 
     private Button dobSetBtn;
 
     private TextView dobTV;
 
     private EditText personalInfoCityET;
+
+
+    private ArrayAdapter<String> adapter;
+    private AutoCompleteTextView autoCompleteTextView;
+
+
 
     private PersonalInfo personalInfo;
 
@@ -90,7 +102,7 @@ public class PersonalInfoForm extends AppointmentFragment {
 
         //check if personInfo object has not been instantiated (a constructor with personalInfo param is used), and instantiate
         if(personalInfo == null){
-            Log.d(TAG, "hi");
+            //Log.d(TAG, "hi");
             personalInfo = new PersonalInfo();
         }
 
@@ -138,13 +150,49 @@ public class PersonalInfoForm extends AppointmentFragment {
             public void onClick(View view) {
 
                 Log.d(TAG, "Clicked citites");
-                geoNameApiHandler.fetchAllUSACities();
+                geoNameApiHandler.fetchAllUSACities(PersonalInfoForm.this);
 
             }
         };
 
         personalInfoCityET.setOnClickListener(onClickListener);
+        autoCompleteTextView = rootView.findViewById(R.id.city_auto_complete_tv);
+        personalInfoCityET.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if(b){
+                    autoCompleteTextView.setVisibility(View.VISIBLE);
+                }else{
+                    autoCompleteTextView.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
 
+        adapter = new ArrayAdapter<>(requireActivity(), R.layout.drop_down_list);
+        autoCompleteTextView.setAdapter(adapter);
+
+        // Set the threshold for triggering the dropdown list
+        autoCompleteTextView.setThreshold(1);
+
+        // Set the filtering logic
+        autoCompleteTextView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Filter the list of cities based on the entered text
+                adapter.getFilter().filter(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+
+
+        geoNameApiHandler.fetchAllUSACities(PersonalInfoForm.this);
 
         return rootView;
 
@@ -155,5 +203,15 @@ public class PersonalInfoForm extends AppointmentFragment {
 
     public PersonalInfo getPersonalInfo() {
         return this.personalInfo;
+    }
+
+    @Override
+    public void onCitiesFetched(ArrayList<String> cities) {
+        // Process the fetched cities here
+        Log.d(TAG, "Fetched cities: " + cities.toString());
+
+        adapter.clear();
+        adapter.addAll(cities);
+        adapter.notifyDataSetChanged();
     }
 }

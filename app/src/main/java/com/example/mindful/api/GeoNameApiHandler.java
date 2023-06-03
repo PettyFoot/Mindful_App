@@ -1,7 +1,11 @@
 package com.example.mindful.api;
 
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+
+import com.example.mindful.BuildConfig;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -11,11 +15,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -24,64 +31,68 @@ import javax.net.ssl.X509TrustManager;
 
 public class GeoNameApiHandler {
     private static final String BASE_URL = "https://api.geonames.org/searchJSON";
-    private static final String USERNAME = "";
+    private static final String USERNAME = BuildConfig.GEONAMES_API_USERNAME;
     private String TAG = "GeoNameApiHandler";
-
-    public void fetchAllUSACities() {
-        Log.d(TAG, "Clicked citites");
-        // Call this method before making the API request
+    private Executor executor = Executors.newSingleThreadExecutor();
+    private Handler handler = new Handler(Looper.getMainLooper());
+    public void fetchAllUSACities(final OnCitiesFetchedListener listener) {
         disableSSLVerification();
-        String requestUrl = BASE_URL + "?country=US&featureCode=PPL&maxRows=500&username=" + USERNAME;
+        String requestUrl = BASE_URL + "?country=US&featureCode=PPL&maxRows=20&username=" + USERNAME;
 
-        new FetchCitiesTask().execute(requestUrl);
+        Log.d(TAG, USERNAME);
+        executor.execute(() -> {
+            ArrayList<String> cities = performFetchCities(requestUrl);
+            handler.post(() -> {
+                if (listener != null) {
+                    listener.onCitiesFetched(cities);
+                }
+            });
+        });
     }
 
-    private class FetchCitiesTask extends AsyncTask<String, Void, Void> {
+    private ArrayList<String> performFetchCities(String urlString) {
+        ArrayList<String> cities = new ArrayList<>();
 
-        @Override
-        protected Void doInBackground(String... urls) {
-            String urlString = urls[0];
+        try {
+            URL url = new URL(urlString);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
 
-            try {
-                URL url = new URL(urlString);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-
-                InputStream inputStream = connection.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
-                }
-
-                parseCitiesResponse(response.toString());
-
-                reader.close();
-                inputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            InputStream inputStream = connection.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
             }
 
-            return null;
+            cities = parseCitiesResponse(response.toString());
+
+            reader.close();
+            inputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        private void parseCitiesResponse(String response) {
-            try {
-                JSONObject jsonResponse = new JSONObject(response);
-                JSONArray citiesArray = jsonResponse.getJSONArray("geonames");
-
-                for (int i = 0; i < citiesArray.length(); i++) {
-                    JSONObject cityObject = citiesArray.getJSONObject(i);
-                    String cityName = cityObject.getString("name");
-                    Log.d("City", cityName);
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
+        return cities;
     }
 
+    private ArrayList<String> parseCitiesResponse(String response) {
+        ArrayList<String> cities = new ArrayList<>();
+        try {
+            JSONObject jsonResponse = new JSONObject(response);
+            JSONArray citiesArray = jsonResponse.getJSONArray("geonames");
+
+            for (int i = 0; i < citiesArray.length(); i++) {
+                JSONObject cityObject = citiesArray.getJSONObject(i);
+                String cityName = cityObject.getString("name");
+                cities.add(cityName);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return cities;
+    }
     // Disable SSL certificate verification
     private void disableSSLVerification() {
         try {
@@ -109,6 +120,9 @@ public class GeoNameApiHandler {
     }
 
 
+    public interface OnCitiesFetchedListener {
+        void onCitiesFetched(ArrayList<String> cities);
+    }
 
 
 }
