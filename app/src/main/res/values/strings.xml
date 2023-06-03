@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Mindful</string>
+    <string name="menu_Open">Open</string>
+    <string name="menu_Close">Close</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
