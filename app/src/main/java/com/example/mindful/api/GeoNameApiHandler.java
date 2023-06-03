@@ -24,7 +24,7 @@ import javax.net.ssl.X509TrustManager;
 
 public class GeoNameApiHandler {
     private static final String BASE_URL = "https://api.geonames.org/searchJSON";
-    private static final String USERNAME = "pettyfoot1"; // Replace with your GeoNames username
+    private static final String USERNAME = "";
     private String TAG = "GeoNameApiHandler";
 
     public void fetchAllUSACities() {
