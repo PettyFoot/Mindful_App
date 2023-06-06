@@ -30,16 +30,17 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 public class GeoNameApiHandler {
-    private static final String BASE_URL = "https://api.geonames.org/searchJSON";
+    private static final String BASE_SEARCH_URL = "https://api.geonames.org/searchJSON";
+
+    private static final String BASE_SEARCH_NEARBY_URL = "https://api.geonames.org/findNearbyPlaceNameJSON";
     private static final String USERNAME = BuildConfig.GEONAMES_API_USERNAME;
     private String TAG = "GeoNameApiHandler";
     private Executor executor = Executors.newSingleThreadExecutor();
     private Handler handler = new Handler(Looper.getMainLooper());
     public void fetchAllUSACities(final OnCitiesFetchedListener listener) {
         disableSSLVerification();
-        String requestUrl = BASE_URL + "?country=US&featureCode=PPL&maxRows=20&username=" + USERNAME;
+        String requestUrl = BASE_SEARCH_URL + "?country=US&featureCode=PPL&maxRows=20&username=" + USERNAME;
 
-        Log.d(TAG, USERNAME);
         executor.execute(() -> {
             ArrayList<String> cities = performFetchCities(requestUrl);
             handler.post(() -> {
@@ -48,6 +49,25 @@ public class GeoNameApiHandler {
                 }
             });
         });
+    }
+
+    public void fetchAllCitiesNearby(final OnCitiesFetchedListener listener, double[] latLong, double searchRadius){
+        disableSSLVerification();
+        Log.d(TAG, "fetching nearby cities");
+        String requestUrl = BASE_SEARCH_NEARBY_URL + "?lat=" + latLong[0] +
+                "&lng=" + latLong[1] + "&radius="+searchRadius+ "&maxRows=20"+ "&username=" + USERNAME;
+
+        executor.execute(() -> {
+            ArrayList<String> cities = performFetchCities(requestUrl);
+            handler.post(() -> {
+                if (listener != null) {
+                    listener.onCitiesFetched(cities);
+                }else{
+                    Log.d(TAG, "no listener for executor");
+                }
+            });
+        });
+
     }
 
     private ArrayList<String> performFetchCities(String urlString) {
@@ -63,6 +83,7 @@ public class GeoNameApiHandler {
             StringBuilder response = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
+                Log.d(TAG, line);
                 response.append(line);
             }
 
