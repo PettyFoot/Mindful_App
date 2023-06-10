@@ -290,4 +290,11 @@ public class Date {
 
         }
     }
+
+    public String printDateString(){
+        String dateString = monthS + " " + dayS + " " + yearS + " " + dayOfWeekS;
+        Log.d(TAG, dateString);
+
+        return dateString;
+    }
 }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:startColor="@color/cadet_grey_500"
+        android:endColor="@color/cadet_grey_200"
+        android:type="linear"
+        android:centerY="0.5"
+        android:centerX="0.5"
+        android:angle="50"
+        />
+
+    <corners android:radius="5dp"/>
+    <stroke android:color="#FF000000" android:width="2dp" /> <!-- Set the desired stroke color and width -->
+
+</shape>

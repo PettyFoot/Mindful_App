@@ -11,6 +11,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
@@ -28,19 +29,22 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
+import com.example.mindful.FieldRequireHandler;
 import com.example.mindful.R;
 import com.example.mindful.api.GeoNameApiHandler;
 import com.example.mindful.service.appointment.AppointmentFragment;
 import com.example.mindful.service.appointment.data.PersonalInfo;
+import com.example.mindful.service.calender.Date;
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import org.w3c.dom.Text;
 
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -51,7 +55,10 @@ import java.util.List;
 public class PersonalInfoForm extends AppointmentFragment implements GeoNameApiHandler.OnCitiesFetchedListener {
 
     private Button dobSetBtn;
+
+    private AppCompatButton submitFormBtn;
     private TextView dobTV;
+    private EditText firstNameET, lastNameET, addressOneET, stateOneET, zipOneET;
     private ArrayAdapter<String> adapter;
     private AutoCompleteTextView autoCompleteTextView;
     private LocationManager locationManager;
@@ -99,6 +106,9 @@ public class PersonalInfoForm extends AppointmentFragment implements GeoNameApiH
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_personal_info_form, container, false);
 
+        //Set members to their layout views
+        InitWidgets(rootView);
+
         //check if personInfo object has not been instantiated (a constructor with personalInfo param is used), and instantiate
         if (personalInfo == null) {
             personalInfo = new PersonalInfo();
@@ -109,13 +119,9 @@ public class PersonalInfoForm extends AppointmentFragment implements GeoNameApiH
             geoNameApiHandler = new GeoNameApiHandler();
         }
 
-        dobSetBtn = rootView.findViewById(R.id.dob_set_btn);
-        dobTV = rootView.findViewById(R.id.dob_tv);
-
         dobSetBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "clicked date swet?");
 
                 DatePickerDialog datePickerDialog = personalInfo.getDob().CreateDatePicker(requireActivity());
                 datePickerDialog.show();
@@ -137,6 +143,18 @@ public class PersonalInfoForm extends AppointmentFragment implements GeoNameApiH
                 }
 
 
+            }
+        });
+
+        submitFormBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "submit");
+                FirebaseAnalytics.getInstance(requireContext()).logEvent("submit_personal_info_form", null);
+                ArrayList<View> some = new ArrayList<View>();
+                some.add(firstNameET);
+
+                CollectFieldDataValidate(some);
             }
         });
 
@@ -163,12 +181,10 @@ public class PersonalInfoForm extends AppointmentFragment implements GeoNameApiH
 
             }
         };
-
-
-        autoCompleteTextView = rootView.findViewById(R.id.city_auto_complete_tv);
         autoCompleteTextView.setOnClickListener(onClickListener);
 
         // adapter = new ArrayAdapter<>(requireActivity(), android.R.layout.simple_list_item_1);
+        // this utilizes GeoNames api and is not built for reliable Get everytime, good enough for early dev
         adapter = new ArrayAdapter<>(requireActivity(), R.layout.drop_down_list);
         autoCompleteTextView.setAdapter(adapter);
 
@@ -193,6 +209,7 @@ public class PersonalInfoForm extends AppointmentFragment implements GeoNameApiH
         });
 
         locationManager = (LocationManager) requireContext().getSystemService(Context.LOCATION_SERVICE);
+        //Nothing implemented because haven't got to that point, just using emulator now
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -216,24 +233,7 @@ public class PersonalInfoForm extends AppointmentFragment implements GeoNameApiH
             }
         };
 
-        // Request location updates
-        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "no location permissions, attempting to grant");
-            ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-
-        }else{
-            Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            if (lastKnownLocation != null) {
-                Log.d(TAG,String.valueOf(lastKnownLocation.getLatitude()) + String.valueOf(lastKnownLocation.getLongitude()));
-                // Handle the last known location
-                useLocation(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-
-            }
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, locationListener);
-
-        }
-
-        //geoNameApiHandler.fetchAllUSACities(PersonalInfoForm.this);
+        HandleLocationPermissions();
 
         return rootView;
 
@@ -255,5 +255,61 @@ public class PersonalInfoForm extends AppointmentFragment implements GeoNameApiH
         adapter.clear();
         adapter.addAll(cities);
         adapter.notifyDataSetChanged();
+    }
+
+    private void InitWidgets(View rootView){
+        dobSetBtn = rootView.findViewById(R.id.dob_set_btn);
+        dobTV = rootView.findViewById(R.id.dob_tv);
+        firstNameET = rootView.findViewById(R.id.first_name_et);
+        lastNameET = rootView.findViewById(R.id.last_name_et);
+        addressOneET = rootView.findViewById(R.id.address_one_et);
+        stateOneET = rootView.findViewById(R.id.state_one_et);
+        zipOneET = rootView.findViewById(R.id.zip_one_et);
+
+        autoCompleteTextView = rootView.findViewById(R.id.city_atv);
+        submitFormBtn = rootView.findViewById(R.id.submit_form_btn);
+
+    }
+
+    private void HandleLocationPermissions(){
+        // Request location updates
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "no location permissions, attempting to grant");
+            ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+
+        }else{
+            Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (lastKnownLocation != null) {
+                Log.d(TAG,String.valueOf(lastKnownLocation.getLatitude()) + String.valueOf(lastKnownLocation.getLongitude()));
+                // Handle the last known location
+                useLocation(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+
+            }
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, locationListener);
+
+        }
+    }
+
+    private boolean CollectFieldDataValidate(ArrayList<View> fieldsToCollect){
+        boolean bIsCollected = true;
+
+        FieldRequireHandler fieldRequireHandler = new FieldRequireHandler(fieldsToCollect);
+        if(fieldRequireHandler.ValidateFields(null)) {
+            //collect view data and store
+            PersonalInfo personalInfo1 = new PersonalInfo(
+                    new Date(personalInfo.getDob().getMonth(), personalInfo.getDob().getDay(), personalInfo.getDob().getYear(), personalInfo.getDob().getDayOfWeek()),
+                    firstNameET.getText().toString(),
+                    lastNameET.getText().toString(), addressOneET.getText().toString(),
+                    stateOneET.getText().toString(), autoCompleteTextView.getText().toString(), zipOneET.getText().toString() );
+            personalInfo = personalInfo1;
+            personalInfo1.printInfo();
+
+        }else{
+            //invalid or unfilled view data collect valid data for temp local storage but not remote storage
+            fieldRequireHandler.getInvalidViews();
+            fieldRequireHandler.getValidViews();
+        }
+
+        return bIsCollected;
     }
 }

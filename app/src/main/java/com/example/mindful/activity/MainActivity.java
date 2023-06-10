@@ -1,4 +1,4 @@
-package com.example.mindful;
+package com.example.mindful.activity;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toolbar;
 
+import com.example.mindful.R;
 import com.example.mindful.service.appointment.AppointmentsViewFragment;
 import com.example.mindful.service.profile.ProfileViewFragment;
 import com.google.android.material.navigation.NavigationView;

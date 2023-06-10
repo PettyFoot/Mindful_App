@@ -99,15 +99,15 @@ public class AppointmentsViewFragment extends Fragment {
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         int width = displayMetrics.widthPixels;
-        Log.d(TAG, String.valueOf(width));
+       // Log.d(TAG, String.valueOf(width));
         for(int i = 0; i < tabLayout.getTabCount(); i++){
             TabLayout.Tab tab = tabLayout.getTabAt(i);
             if(tab != null){
-                Log.d(TAG, "tab exists");
-                Log.d(TAG, tab.getClass().getName());
+              //  Log.d(TAG, "tab exists");
+               // Log.d(TAG, tab.getClass().getName());
                 View tabView = ((ViewGroup) tabLayout.getChildAt(0)).getChildAt(i);;
                 if(tabView != null){
-                    Log.d(TAG, tabView.getClass().getName());
+                  //  Log.d(TAG, tabView.getClass().getName());
                     ViewGroup.LayoutParams layoutParams = tabView.getLayoutParams();
                     layoutParams.width = width/2;
                     tabView.setLayoutParams(layoutParams);

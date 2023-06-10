@@ -11,11 +11,12 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical">
+
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -30,6 +31,7 @@
                     android:layout_marginEnd="20dp"/>
 
                 <EditText
+                    android:id="@+id/first_name_et"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:inputType="text"
@@ -44,6 +46,7 @@
                     android:layout_marginEnd="20dp"/>
 
                 <EditText
+                    android:id="@+id/last_name_et"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:inputType="text"
@@ -110,6 +113,7 @@
                     android:layout_marginEnd="20dp"/>
 
                 <EditText
+                    android:id="@+id/address_one_et"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:inputType="text"
@@ -140,6 +144,7 @@
                             android:layout_marginEnd="20dp"/>
 
                         <EditText
+                            android:id="@+id/state_one_et"
                             android:layout_width="match_parent"
                             android:layout_height="0dp"
                             android:layout_weight="1"
@@ -165,6 +170,7 @@
                             android:layout_marginEnd="10dp"/>
 
                         <EditText
+                            android:id="@+id/zip_one_et"
                             android:layout_width="match_parent"
                             android:layout_height="0dp"
                             android:layout_weight="1"
@@ -195,7 +201,7 @@
 
 
                     <AutoCompleteTextView
-                        android:id="@+id/city_auto_complete_tv"
+                        android:id="@+id/city_atv"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_marginStart="20dp"
@@ -204,7 +210,19 @@
                         android:layout_weight="1"
                         android:background="@color/cadet_grey_200" />
 
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/submit_form_btn"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="30dp"
+                    android:text="Submit"
+                    android:background="@drawable/button_sel"
+                    />
+
             </LinearLayout>
+
+
 
         </RelativeLayout>
 

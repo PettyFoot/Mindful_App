@@ -31,7 +31,6 @@ import javax.net.ssl.X509TrustManager;
 
 public class GeoNameApiHandler {
     private static final String BASE_SEARCH_URL = "https://api.geonames.org/searchJSON";
-
     private static final String BASE_SEARCH_NEARBY_URL = "https://api.geonames.org/findNearbyPlaceNameJSON";
     private static final String USERNAME = BuildConfig.GEONAMES_API_USERNAME;
     private String TAG = "GeoNameApiHandler";
